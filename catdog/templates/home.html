@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="content-section">
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        {{  form.vote.label }}
+        <fieldset>
+                {{ form.vote }}
+            <div class="d-flex justify-content-center">
+
+            <button type="submit" class="btn btn-primary">Vote</button>
+            </div>
+        </fieldset>
+    </form>
+
+    <div>
+        <h1>current score:</h1>
+        <h2>Cats {{ r.get('Cats').decode() }}</h2>
+        <h2>Dogs {{ r.get('Dogs').decode() }}</h2>
+    </div>
+
+</div>
+
+
+{% endblock content%}
