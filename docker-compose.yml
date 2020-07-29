@@ -7,7 +7,7 @@ services:
       context: ./
       dockerfile: DockerFile
     container_name: flask-c
-    command: gunicorn --bind 0.0.0.0:8000 --workers 3 "catdog:app" --preload
+    command: gunicorn --bind 0.0.0.0:8000 --workers 3 "catdog:app" --preload --timeout 60
     ports:
       - 8000:8000
     volumes:

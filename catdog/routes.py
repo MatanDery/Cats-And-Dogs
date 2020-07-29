@@ -1,8 +1,11 @@
 from flask import Flask, render_template, flash, request, make_response, redirect ,url_for
 from catdog import app, que, r, worker
-from catdog.forms import VoteForm
-from time import sleep
+from catdog.forms import VoteForm, UpdateImage
+from catdog.poll_votes import update_votes
 import subprocess
+from catdog.user_image_page import save_picture, detect_wraper
+from hashlib import md5
+
 
 def init_db():
     value = r.get("Dogs")
@@ -42,15 +45,32 @@ def home():
     return render_template('home.html', form=form, r=r)
 
 
-def update_votes(voted, req_ip):
-    sleep(2)
-    if vote_check(req_ip) != 0:
-        r.set(voted, int(r.get(voted)) + 1)
-    return
+@app.route('/images', methods=['GET', 'POST'])
+def user_images():
+    form = UpdateImage()
+
+    #req_ip = request.remote_addr  # todo
+    req_ip = request.headers.getlist("X-Forwarded-For")[0]
+
+    if form.validate_on_submit():
+        if form.picture.data:
+            pic = save_picture(form.picture.data, req_ip)
+            que.enqueue(detect_wraper, picture_name=pic)  # todo more workers?
+
+            flash('The detection will be in shortly :)', category='success')
+
+    load_pic = False
+    detection = None
+    pic_name = md5(req_ip.encode()).hexdigest()+'.jpg'
+    if r.hget('picture_detaction', pic_name) is not None:
+        load_pic = True
+        detection = r.hget('picture_detaction', pic_name)
+        pic_name = url_for('static', filename='user_pictures/' + pic_name)
+    return render_template('images.html', form=form, pic_name=pic_name,
+                           load_pic=load_pic, detection=detection)
 
 
-def vote_check(req_ip):
-    x = r.sadd('voted_ip', req_ip)
-    return x
+
+
 
 
